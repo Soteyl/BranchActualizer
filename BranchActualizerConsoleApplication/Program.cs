@@ -6,9 +6,9 @@ using BranchActualizer.Branches.MergeResolver;
 using BranchActualizer.Repositories;
 using BranchActualizer.Slack;
 using BranchActualizer.Slack.Handlers;
+using Microsoft.Extensions.Configuration;
 using SharpBucket.V2;
 using SlackNet;
-using File = System.IO.File;
 using User = BranchActualizer.Input.User;
 
 class Program
@@ -21,20 +21,16 @@ class Program
 
     public static async Task Main(string[] args)
     {
-        Console.WriteLine("Initializing...");
         CancellationToken cancellationToken = default;
 
-        if (!Path.Exists(ConfigRelativePath))
-            Directory.CreateDirectory(Path.GetDirectoryName(ConfigRelativePath)!);
-        if (!File.Exists(ConfigRelativePath)) 
-            await File.WriteAllTextAsync(ConfigRelativePath, JsonSerializer.Serialize(new BranchActualizerConfiguration(), 
-                new JsonSerializerOptions()
-            {
-                WriteIndented = true
-            }), cancellationToken);
+        Console.WriteLine("Get configuration...");
+        
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile(ConfigRelativePath, optional: false, reloadOnChange: true)
+            .Build();
 
-        var config = JsonSerializer.Deserialize<BranchActualizerConfiguration>(
-            await File.ReadAllTextAsync(ConfigRelativePath, cancellationToken))!;
+        var config = configuration.Get<BranchActualizerConfiguration>();
 
         _jira = Jira.CreateRestClient(config.JiraUrl, config.JiraEmail, config.JiraApiToken);
 
