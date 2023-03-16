@@ -1,0 +1,27 @@
+{
+  "BitBucketUsername": "",
+  "BitBucketAppPassword": "",
+  "TriggerChannelName": "",
+  "MessageChannelName": "",
+  "WorkspaceSlugOrUuid": "",
+  "ProjectUuid": "",
+  "ExcludedBranches": {
+    "CoreMonolith": [
+      ""
+    ]
+  },
+  "JiraEmail": "",
+  "JiraApiToken": "",
+  "Users": [
+    {
+      "JiraId": "",
+      "SlackId": ""
+    }
+  ],
+  "JiraUrl": "",
+  "BitbucketUrl": "",
+  "SlackApiToken": "",
+  "SlackAppLevelToken": "",
+  "Project": "",
+  "ActualizeSince": ""
+}

@@ -1,4 +1,4 @@
-﻿using Atlassian.Jira;
+using Atlassian.Jira;
 using BranchActualizer;
 using BranchActualizer.Branches;
 using BranchActualizer.Branches.MergeResolver;
