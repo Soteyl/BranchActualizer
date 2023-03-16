@@ -10,6 +10,10 @@
 
     <ItemGroup>
       <PackageReference Include="Atlassian.SDK" Version="13.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
       <PackageReference Include="SharpBucket" Version="0.17.0" />
       <PackageReference Include="SlackNet" Version="0.10.20" />
       <PackageReference Include="System.Linq.Async" Version="6.0.1" />
