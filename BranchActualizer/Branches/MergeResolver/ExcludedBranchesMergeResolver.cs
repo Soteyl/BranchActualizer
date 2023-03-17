@@ -17,7 +17,7 @@ public class ExcludedBranchesMergeResolver: CompositeBranchMergeResolver
     protected override Task<string> ToFilter(FilterInfo info, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_excluded?.Any() is not true ? string.Empty 
-            : string.Join(" AND ", _excluded!.Where(x => x.Repository.Equals(info.RepositorySlug))
+            : string.Join(" AND ", _excluded!.Where(x => x.Repository.Equals(info.RepositorySlug, StringComparison.InvariantCultureIgnoreCase))
             .Select(x => $"name != \"{x.Name}\"")));
     }
 }
