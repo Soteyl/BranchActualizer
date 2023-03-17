@@ -1,24 +1,38 @@
 {
-  "BitBucketUsername": "",
-  "BitBucketAppPassword": "",
-  "TriggerChannelName": "",
-  "MessageChannelName": "",
-  "WorkspaceSlugOrUuid": "",
-  "ProjectUuid": "",
+  "BitBucketUsername": "oatechuser",
+  "BitBucketAppPassword": "ATBB42Ek7JDzGMwH97uvExamyqfjAAF3348E",
+  "TriggerChannelName": "C04PE0GQZB3",
+  "MessageChannelName": "C04PE0GQZB3",
+  "WorkspaceSlugOrUuid": "imscoua",
+  "ProjectUuid": "{34c09f89-20e7-442d-985b-c09e5de615a7}",
   "ExcludedBranches": {
+    "CoreMonolith": [
+      "feature/HC-5040_dsg",
+      "feature/HC-4912_save_admixer_keys",
+      "feature/HC-4944_manual_services",
+      "feature/HC-4946_manual_services"
+    ]
   },
-  "JiraEmail": "",
-  "JiraApiToken": "",
+  "JiraEmail": "p.kyslytsia@helsi.me",
+  "JiraApiToken": "ATATT3xFfGF0Ye6-p3M_yH2IiPVtziVRk7S05CJtHc6KmWvyzgfjc4CJ7rU7k1Tebwhs-Oqj2WkQnuT3uyvBzrZMtz5N9aEQY8xdXBZeLPe3F6IfZE0i9ZfpbBjWTQBR1BiVaYi1NPc5K7pYSwBOhpe4YLc8zwJBrHVu10t09vkGBYbKCLgSeDA=E8EE3541",
   "Users": [
     {
-      "JiraId": "",
-      "SlackId": ""
+      "JiraId": "633a9d3a234d44d406d3c0b1",
+      "SlackId": "U044U5ZNWV8"
+    },
+    {
+      "JiraId": "557058:8bb1385d-9462-4395-b96d-8780e2799bd8",
+      "SlackId": "D04571NQ141"
+    },
+    {
+      "JiraId": "5de63b7c752c1b0d114f434e",
+      "SlackId": "UQY9P6W8Z"
     }
   ],
-  "JiraUrl": "",
-  "BitbucketUrl": "",
-  "SlackApiToken": "",
-  "SlackAppLevelToken": "",
-  "Project": "",
-  "ActualizeSince": ""
+  "JiraUrl": "https://miswiki.atlassian.net",
+  "BitbucketUrl": "https://api.bitbucket.org/2.0",
+  "SlackApiToken": "xoxb-48290624704-4763728041300-0ttCalJYL3jwqWrGSmOVwUKt",
+  "SlackAppLevelToken": "xapp-1-A04MUV07BGX-4897249496518-5a6a297e917a222f073dfe777e7e3166913f129e4df22e282088d6f43a6809d6",
+  "Project": "HC",
+  "ActualizeSince": "4700"
 }
