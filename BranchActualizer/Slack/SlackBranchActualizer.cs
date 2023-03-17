@@ -20,11 +20,11 @@ public class SlackBranchActualizer
 
     private readonly ISlackApiClient _slack;
 
-    public SlackBranchActualizer(string resultMessageChannel, IEnumerable<User>? users,
+    public SlackBranchActualizer(SlackBranchActualizerSettings settings,
         IActualRepositoriesContainer repositories, IBranchActualizerFactory factory, ISlackApiClient slack)
     {
-        _resultMessageChannel = resultMessageChannel;
-        _users = users?.ToList();
+        _resultMessageChannel = settings.ResultMessageChannel;
+        _users = settings.Users?.ToList();
         _repositories = repositories;
         _factory = factory;
         _slack = slack;
