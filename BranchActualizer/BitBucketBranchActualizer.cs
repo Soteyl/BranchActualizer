@@ -49,6 +49,10 @@ public class BitBucketBranchActualizer: IBranchActualizer
                     PullRequestLink = pullRequest?.links?.self?.href,
                     AuthorId = branch?.Author
                 });
+                if (pullRequest?.id is not null)
+                {
+                    await pullRequestResource.PullRequestResource(pullRequest.id.Value).DeclinePullRequestAsync(cancellationToken);
+                }
             }
         }
 
