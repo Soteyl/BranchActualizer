@@ -1,4 +1,5 @@
 ﻿using BranchActualizer.Branches;
+using Microsoft.Extensions.Logging;
 using SharpBucket.V2;
 using SharpBucket.V2.EndPoints;
 using SharpBucket.V2.Pocos;
@@ -17,13 +18,21 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
     private readonly SharpBucketV2 _bucket;
     
     private readonly BitBucketBranchActualizerSettings _settings;
+    
+    private readonly ILogger<BitbucketBranchActualizerFactory> _logger;
+    
+    private readonly ILogger<BitBucketBranchActualizer> _actualizerLogger;
 
-    public BitbucketBranchActualizerFactory(IBranchMergeSolver mergeSolver, IBranchAuthorResolver authorResolver, SharpBucketV2 bucket, BitBucketBranchActualizerSettings settings)
+    public BitbucketBranchActualizerFactory(IBranchMergeSolver mergeSolver, IBranchAuthorResolver authorResolver, 
+        SharpBucketV2 bucket, BitBucketBranchActualizerSettings settings, ILogger<BitbucketBranchActualizerFactory> logger,
+        ILogger<BitBucketBranchActualizer> actualizerLogger)
     {
         _mergeSolver = mergeSolver;
         _authorResolver = authorResolver;
         _bucket = bucket;
         _settings = settings;
+        _logger = logger;
+        _actualizerLogger = actualizerLogger;
     }
 
     public IBranchActualizerFactory WithRepositories(IEnumerable<RepositoryInfo> repositories)
@@ -31,7 +40,7 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
         return new BitbucketBranchActualizerFactory(_mergeSolver, _authorResolver, _bucket, new BitBucketBranchActualizerSettings(_settings)
         {
             Repositories = repositories
-        });
+        }, _logger, _actualizerLogger);
     }
 
     public async Task<IBranchActualizer> BuildBranchActualizerAsync(CancellationToken cancellationToken = default)
@@ -40,13 +49,13 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
         {
             return null;
         }
-        Console.WriteLine("Get repositories...");
+        _logger.Log(LogLevel.Information, "Get repositories...");
         var repositoryResource = _bucket
             .WorkspacesEndPoint()
             .WorkspaceResource(_settings.WorkspaceSlugOrUuid) // "imscoua"
             .RepositoriesResource;
 
-        Console.WriteLine("Get user branches...");
+        _logger.Log(LogLevel.Information, "Get user branches...");
 
         var notActualizedBranchesTasks =
             _settings.Repositories.Select(repository => GetRepositoryWithNotActualizedBranches(repository, repositoryResource))
@@ -67,14 +76,14 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
 
         await Task.WhenAll(notActualizedBranches);
 
-        return new BitBucketBranchActualizer(notActualizedBranches.Select(x => x.Result));
+        return new BitBucketBranchActualizer(notActualizedBranches.Select(x => x.Result), _actualizerLogger);
     }
 
     private async Task<IEnumerable<(Branch source, RepositoryResource repositoryResource, RepositoryInfo repository, Branch branch)>> GetRepositoryWithNotActualizedBranches(
         RepositoryInfo repository,
         RepositoriesAccountResource repositoryResource)
     {
-        Console.WriteLine($"Start inspecting {repository.Name}");
+        _logger.Log(LogLevel.Information, $"Start inspecting {repository.Name}");
         var currentRepo = repositoryResource.RepositoryResource(repository.Id);
         var branches = currentRepo.BranchesResource.ListBranches(new ListParameters()
         {
@@ -98,7 +107,7 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
         Dictionary<(Branch source, RepositoryResource repositoryResource, RepositoryInfo repository, Branch branch), bool> actualizedBranches = new();
         foreach (var branch in allBranches)
         {
-            Console.WriteLine($"Inspecting {branch.name} at {repository.Name}");
+            _logger.Log(LogLevel.Information, $"Inspecting {branch.name} at {repository.Name}");
             Branch source;
             if (branch.name.Contains("hotfix") && master is not null)
                 source = master;
@@ -106,7 +115,7 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
                 source = develop;
             else
             {
-                Console.WriteLine("Cannot find develop or master branch...");
+                _logger.Log(LogLevel.Warning, $"Cannot find develop or master branch for {branch.name}...");
                 continue;
             }
 
