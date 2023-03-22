@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using BranchActualizer.Repositories;
+using Microsoft.Extensions.Logging;
 using SlackNet;
 using SlackNet.WebApi;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 using User = BranchActualizer.Input.User;
 
 namespace BranchActualizer.Slack;
@@ -19,15 +21,18 @@ public class SlackBranchActualizer
     private readonly IBranchActualizerFactory _factory;
 
     private readonly ISlackApiClient _slack;
+    
+    private readonly ILogger<SlackBranchActualizer> _logger;
 
     public SlackBranchActualizer(SlackBranchActualizerSettings settings,
-        IActualRepositoriesContainer repositories, IBranchActualizerFactory factory, ISlackApiClient slack)
+        IActualRepositoriesContainer repositories, IBranchActualizerFactory factory, ISlackApiClient slack, ILogger<SlackBranchActualizer> logger)
     {
         _resultMessageChannel = settings.ResultMessageChannel;
         _users = settings.Users?.ToList();
         _repositories = repositories;
         _factory = factory;
         _slack = slack;
+        _logger = logger;
     }
 
     public async Task ActualizeAsync(string messageTextWithRepository, CancellationToken cancellationToken = default)
@@ -35,6 +40,8 @@ public class SlackBranchActualizer
         var repositoryToActualize = (await _repositories.GetActualRepositoriesAsync(cancellationToken))
             .FirstOrDefault(x => messageTextWithRepository.Contains(x.Name, StringComparison.InvariantCultureIgnoreCase));
 
+        _logger.Log(LogLevel.Information, $"Repository to actualize from message: {repositoryToActualize?.Name}");
+        
         if (repositoryToActualize is null)
         {
             await _slack.Chat.PostMessage(new Message()
@@ -54,6 +61,8 @@ public class SlackBranchActualizer
         var actualizer = await _factory.WithRepositories(new[] { repositoryToActualize })
             .BuildBranchActualizerAsync(cancellationToken);
         var result = await actualizer.ActualizeAsync(cancellationToken);
+        
+        _logger.Log(LogLevel.Information, $"Actualizing for {repositoryToActualize?.Name} finished. Deleting message...");
 
         try
         {
@@ -63,10 +72,16 @@ public class SlackBranchActualizer
         {
             Console.WriteLine(e);
         }
+        
+        _logger.Log(LogLevel.Information, $"Message deleted. Sending result message...");
+
+        var resultMessage = GetResultMessage(result, repositoryToActualize?.Name);
+        
+        _logger.Log(LogLevel.Information, $"Result message: {resultMessage}");
 
         message = await _slack.Chat.PostMessage(new Message()
         {
-            Text = GetResultMessage(result, repositoryToActualize?.Name),
+            Text = resultMessage,
             Channel = _resultMessageChannel,
             LinkNames = true,
         });

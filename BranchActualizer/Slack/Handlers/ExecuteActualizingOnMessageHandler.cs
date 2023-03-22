@@ -1,5 +1,7 @@
-﻿using SlackNet;
+﻿using Microsoft.Extensions.Logging;
+using SlackNet;
 using SlackNet.Events;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace BranchActualizer.Slack.Handlers;
 
@@ -12,18 +14,23 @@ public class ExecuteActualizingOnMessageHandler : IEventHandler<MessageEvent>
     private readonly ISlackApiClient _slack;
     
     private readonly SlackBranchActualizer _actualizer;
+    
+    private readonly ILogger _logger;
 
-    public ExecuteActualizingOnMessageHandler(string actualizeTriggerChannel, ISlackApiClient slack, SlackBranchActualizer actualizer)
+    public ExecuteActualizingOnMessageHandler(string actualizeTriggerChannel, ISlackApiClient slack, SlackBranchActualizer actualizer,
+        ILogger<ExecuteActualizingOnMessageHandler> logger)
     {
         _actualizeTriggerChannel = actualizeTriggerChannel;
         _slack = slack;
         _actualizer = actualizer;
+        _logger = logger;
     }
 
     public async Task Handle(MessageEvent slackEvent)
     {
         try
         {
+            _logger.Log(LogLevel.Information, $"Message received in channel {slackEvent.Channel}. Actualizing...");
             if ((await _slack.Conversations.Info(slackEvent.Channel)).Id.Equals(_actualizeTriggerChannel) &&
                 slackEvent.User?.Equals(await GetBotId()) is false)
             {
@@ -32,7 +39,7 @@ public class ExecuteActualizingOnMessageHandler : IEventHandler<MessageEvent>
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            _logger.Log(LogLevel.Error, e.ToString());
             throw;
         }
     }

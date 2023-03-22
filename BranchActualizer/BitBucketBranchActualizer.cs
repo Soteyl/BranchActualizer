@@ -1,4 +1,5 @@
-﻿using SharpBucket.V2;
+﻿using Microsoft.Extensions.Logging;
+using SharpBucket.V2;
 using SharpBucket.V2.EndPoints;
 using SharpBucket.V2.Pocos;
 using RepositoryInfo = BranchActualizer.Repositories.RepositoryInfo;
@@ -8,9 +9,12 @@ namespace BranchActualizer;
 public class BitBucketBranchActualizer: IBranchActualizer
 {
     private readonly List<ExtendedBranchInfo> _branches;
+    
+    private readonly ILogger _logger;
 
-    internal BitBucketBranchActualizer(IEnumerable<ExtendedBranchInfo> branches)
+    internal BitBucketBranchActualizer(IEnumerable<ExtendedBranchInfo> branches, ILogger<BitBucketBranchActualizer> logger)
     {
+        _logger = logger;
         _branches = branches.ToList();
     }
     
@@ -22,7 +26,7 @@ public class BitBucketBranchActualizer: IBranchActualizer
         var successMerges = new List<IBranchInfo>();
         foreach (var branch in _branches)
         {
-            Console.WriteLine($"Actualizing {branch.Branch.name}");
+            _logger.Log(LogLevel.Information, $"Actualizing {branch.Branch.name}");
             var pullRequestResource = branch.RepositoryResource.PullRequestsResource();
             PullRequest? pullRequest = null;
             try
@@ -33,9 +37,9 @@ public class BitBucketBranchActualizer: IBranchActualizer
                     source = new Source { branch = branch.Source },
                     destination = new Source { branch = branch.Branch }
                 }, cancellationToken);
-                Console.WriteLine("Created pull request");
+                _logger.Log(LogLevel.Information, "Created pull request");
                 await pullRequestResource.PullRequestResource(pullRequest.id!.Value).AcceptAndMergePullRequestAsync(cancellationToken);
-                Console.WriteLine($"Merged {branch.Source.name} in {branch.Branch.name}");
+                _logger.Log(LogLevel.Information, $"Merged {branch.Source.name} in {branch.Branch.name}");
                 successMerges.Add(branch);
             }
             catch (BitbucketV2Exception ex)
@@ -53,6 +57,7 @@ public class BitBucketBranchActualizer: IBranchActualizer
                 {
                     await pullRequestResource.PullRequestResource(pullRequest.id.Value).DeclinePullRequestAsync(cancellationToken);
                 }
+                _logger.Log(LogLevel.Warning, $"Conflict while actualizing {branch?.Branch?.name}");
             }
         }
 
