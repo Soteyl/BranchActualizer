@@ -24,8 +24,21 @@ public class BitBucketBranchActualizer: IBranchActualizer
     {
         var conflicts = new List<PullRequestMergeConflict>();
         var successMerges = new List<IBranchInfo>();
+        var cannotActualize = new List<CannotActualize>();
         foreach (var branch in _branches)
         {
+            if (branch.Source is null)
+            {
+                cannotActualize.Add(new CannotActualize()
+                {
+                    BranchName = branch.Branch.name,
+                    RepositoryName = branch.Repository?.Name,
+                    AuthorId = branch?.Author,
+                    Reason = "Cannot find source branch"
+                });
+                continue;
+            }
+
             _logger.Log(LogLevel.Information, $"Actualizing {branch.Branch.name}");
             var pullRequestResource = branch.RepositoryResource.PullRequestsResource();
             PullRequest? pullRequest = null;
@@ -38,7 +51,8 @@ public class BitBucketBranchActualizer: IBranchActualizer
                     destination = new Source { branch = branch.Branch }
                 }, cancellationToken);
                 _logger.Log(LogLevel.Information, "Created pull request");
-                await pullRequestResource.PullRequestResource(pullRequest.id!.Value).AcceptAndMergePullRequestAsync(cancellationToken);
+                await pullRequestResource.PullRequestResource(pullRequest.id!.Value)
+                    .AcceptAndMergePullRequestAsync(cancellationToken);
                 _logger.Log(LogLevel.Information, $"Merged {branch.Source.name} in {branch.Branch.name}");
                 successMerges.Add(branch);
             }
@@ -55,13 +69,16 @@ public class BitBucketBranchActualizer: IBranchActualizer
                 });
                 if (pullRequest?.id is not null)
                 {
-                    await pullRequestResource.PullRequestResource(pullRequest.id.Value).DeclinePullRequestAsync(cancellationToken);
+                    await pullRequestResource.PullRequestResource(pullRequest.id.Value)
+                        .DeclinePullRequestAsync(cancellationToken);
                 }
+
                 _logger.Log(LogLevel.Warning, $"Conflict while actualizing {branch?.Branch?.name}");
             }
         }
 
-        return new ActualizeBranchesResult { Conflicts = conflicts, SuccessMerges = successMerges };
+        return new ActualizeBranchesResult
+            { Conflicts = conflicts, SuccessMerges = successMerges, CannotActualize = cannotActualize };
     }
 
     public Task ExcludeBranchesAsync(IEnumerable<IBranchInfo> branches, CancellationToken cancellationToken = default)
@@ -79,7 +96,7 @@ public class BitBucketBranchActualizer: IBranchActualizer
         
         public RepositoryInfo Repository { get; set; }
         
-        public Branch Source { get; set; }
+        public Branch? Source { get; set; }
         
         public Branch Branch { get; set; }
 

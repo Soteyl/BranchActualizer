@@ -100,11 +100,11 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
         return await GetNotActualizedBranches(foundMyBranches, develop, master, repository, currentRepo);
     }
 
-    private async Task<IEnumerable<(Branch source, RepositoryResource repositoryResource, RepositoryInfo repository, Branch branch)>> GetNotActualizedBranches(List<Branch> allBranches,
+    private async Task<IEnumerable<(Branch? source, RepositoryResource repositoryResource, RepositoryInfo repository, Branch branch)>> GetNotActualizedBranches(List<Branch> allBranches,
         Branch develop, Branch master, RepositoryInfo repository,
         RepositoryResource repositoryResource)
     {
-        Dictionary<(Branch source, RepositoryResource repositoryResource, RepositoryInfo repository, Branch branch), bool> actualizedBranches = new();
+        Dictionary<(Branch? source, RepositoryResource repositoryResource, RepositoryInfo repository, Branch branch), bool> actualizedBranches = new();
         foreach (var branch in allBranches)
         {
             _logger.Log(LogLevel.Information, $"Inspecting {branch.name} at {repository.Name}");
@@ -116,15 +116,15 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
             else
             {
                 _logger.Log(LogLevel.Warning, $"Cannot find develop or master branch for {branch.name}...");
-                continue;
+                source = null;
             }
 
-            actualizedBranches[(source, repositoryResource, repository, branch)] = repositoryResource.ListCommits(new ListCommitsParameters()
-                {
-                    Excludes = { branch.name },
-                    Includes = { source.name },
-                    Max = 1
-                }) is {Count: 0};
+            actualizedBranches[(source, repositoryResource, repository, branch)] = (source is not null) && repositoryResource.ListCommits(new ListCommitsParameters()
+            {
+                Excludes = { branch.name },
+                Includes = { source?.name },
+                Max = 1
+            }) is {Count: 0};
         }
 
         return actualizedBranches.Where(x => !x.Value).Select(x => x.Key);

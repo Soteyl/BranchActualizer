@@ -113,6 +113,16 @@ public class SlackBranchActualizer
             }
         }
 
+        if (result.CannotActualize.Any())
+        {
+            sb.AppendLine("\nНе вдалося актуалізувати:");
+            foreach (var cannotActualize in result.CannotActualize)
+            {
+                sb.AppendLine(
+                    $"{cannotActualize.BranchName} ({cannotActualize.RepositoryName}) - {cannotActualize.Reason}");
+            }
+        }
+
         return sb.ToString();
     }
 }

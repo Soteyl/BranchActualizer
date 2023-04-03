@@ -111,7 +111,8 @@ class Program
                 config.TriggerChannelName!,
                 x.ServiceProvider.GetApiClient(),
                 provider.GetRequiredService<SlackBranchActualizer>(),
-                provider.GetRequiredService<ILogger<ExecuteActualizingOnMessageHandler>>()
+                provider.GetRequiredService<ILogger<ExecuteActualizingOnMessageHandler>>(),
+                DateTime.Now
             ))
             .RegisterEventHandler(x => new ActualizeOnReactionHandler(config.MessageChannelName!, 
                 provider.GetRequiredService<SlackBranchActualizer>(), x.ServiceProvider.GetApiClient(), 
