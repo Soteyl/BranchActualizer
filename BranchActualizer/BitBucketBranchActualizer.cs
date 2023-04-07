@@ -75,6 +75,16 @@ public class BitBucketBranchActualizer: IBranchActualizer
 
                 _logger.Log(LogLevel.Warning, $"Conflict while actualizing {branch?.Branch?.name}");
             }
+            catch (Exception ex)
+            {
+                cannotActualize.Add(new CannotActualize()
+                {
+                    BranchName = branch?.Branch?.name,
+                    RepositoryName = branch?.Repository?.Name,
+                    AuthorId = branch?.Author,
+                    Reason = ex.Message
+                });
+            }
         }
 
         return new ActualizeBranchesResult
