@@ -104,22 +104,22 @@ public class SlackBranchActualizer
             }
         }
 
-        if (result.SuccessMerges.Any())
-        {
-            sb.AppendLine("\nУспішні актуалізації:");
-            foreach (var merge in result.SuccessMerges)
-            {
-                sb.AppendLine($"{merge.BranchName} ({merge.RepositoryName})");
-            }
-        }
-
         if (result.CannotActualize.Any())
         {
             sb.AppendLine("\nНе вдалося актуалізувати:");
             foreach (var cannotActualize in result.CannotActualize)
             {
                 sb.AppendLine(
-                    $"{cannotActualize.BranchName} ({cannotActualize.RepositoryName}) - {cannotActualize.Reason}");
+                    $"{cannotActualize.BranchName} ({cannotActualize.RepositoryName}) - {cannotActualize.Reason} <@{_users?.FirstOrDefault(x => x.JiraId?.Equals(cannotActualize.AuthorId) is true)?.SlackId ?? "channel"}>");
+            }
+        }
+
+        if (result.SuccessMerges.Any())
+        {
+            sb.AppendLine("\nУспішні актуалізації:");
+            foreach (var merge in result.SuccessMerges)
+            {
+                sb.AppendLine($"{merge.BranchName} ({merge.RepositoryName})");
             }
         }
 
