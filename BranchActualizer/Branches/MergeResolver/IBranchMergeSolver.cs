@@ -8,4 +8,6 @@ public interface IBranchMergeSolver
     /// https://developer.atlassian.com/cloud/bitbucket/rest/intro#filtering
     /// </summary>
     Task<string> ToFilterAsync(FilterInfo info, CancellationToken cancellationToken = default);
+
+    Task RefreshAsync(CancellationToken cancellationToken = default);
 }

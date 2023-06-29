@@ -63,6 +63,12 @@ public class JiraUsersIssuesBranchMergeSolver : CompositeBranchMergeResolver, IB
         return _issues;
     }
 
+    public override Task RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        _issues = null;
+        return Task.CompletedTask;
+    }
+
     private string GetJql()
     {
         if (_jql is not null) return _jql;

@@ -49,6 +49,8 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
         {
             return null;
         }
+
+        await _mergeSolver.RefreshAsync(cancellationToken);
         _logger.Log(LogLevel.Information, "Get repositories...");
         var repositoryResource = _bucket
             .WorkspacesEndPoint()
@@ -89,6 +91,7 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
         {
             Filter = AddDevelopAndMasterToFilter(await _mergeSolver.ToFilterAsync(new FilterInfo()
                 { RepositorySlug = repository.Id }))
+
         });
         var foundBranches = await branches.ToAsyncEnumerable().WhereAwait(async(x) => await _mergeSolver.ShouldMergeAsync(new BranchInfo() { Name = x.name, Repository = repository.Id }))
             .ToListAsync();

@@ -24,6 +24,11 @@ public abstract class CompositeBranchMergeResolver: ICompositeBranchMergeSolver
         return string.Join(" AND ", tasks.Where(x => !string.IsNullOrWhiteSpace(x.Result)).Select(x => $"({x.Result})"));
     }
 
+    public virtual Task RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
     public ICompositeBranchMergeSolver With(IBranchMergeSolver other)
     {
         _other.Add(other);
