@@ -39,7 +39,7 @@ public class BitBucketActualRepositoriesCacheContainer : IActualRepositoriesCont
             {
                 Name = x.name,
                 Id = x.slug
-            });
+            }).OrderByDescending(x => x.Name);
         
         _lastCached = DateTime.Now;
 
