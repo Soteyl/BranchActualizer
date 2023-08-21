@@ -29,6 +29,7 @@ public class ActualizeOnReactionHandler : IEventHandler<ReactionAdded>
         try
         {
             if (slackEvent.Item is ReactionMessage reactionMessage &&
+                slackEvent.Reaction.Equals("repeat") &&
                 (await _slack.Conversations.Info(reactionMessage.Channel)).Id.Equals(_channel) &&
                 slackEvent.User?.Equals(await GetBotId()) is false)
             {
