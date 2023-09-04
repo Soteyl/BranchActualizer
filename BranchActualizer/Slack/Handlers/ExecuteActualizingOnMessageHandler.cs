@@ -35,10 +35,10 @@ public class ExecuteActualizingOnMessageHandler : IEventHandler<MessageEvent>
         {
             var date = DateTimeOffset.FromUnixTimeSeconds((long)double.Parse(slackEvent.Ts, CultureInfo.InvariantCulture) + 30);
             if (date < _since) return;
-            _logger.Log(LogLevel.Information, $"Message received in channel {slackEvent.Channel}. Actualizing...");
             if ((await _slack.Conversations.Info(slackEvent.Channel)).Id.Equals(_actualizeTriggerChannel) &&
-                slackEvent.User?.Equals(await GetBotId()) is false)
+                slackEvent.User?.Equals(await GetBotId()) is false && !slackEvent.ThreadTimestamp.HasValue)
             {
+                _logger.Log(LogLevel.Information, $"Message received in channel {slackEvent.Channel}. Actualizing...");
                 await _actualizer.ActualizeAsync(slackEvent.Text);
             }
         }

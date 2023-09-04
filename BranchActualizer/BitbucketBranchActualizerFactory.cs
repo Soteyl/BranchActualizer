@@ -114,7 +114,7 @@ public class BitbucketBranchActualizerFactory: IBranchActualizerFactory
             Branch source;
             if (branch.name.Contains("hotfix") && master is not null)
                 source = master;
-            else if (branch.name.Contains("feature") && develop is not null)
+            else if (branch.name.Contains("feature") || branch.name.Contains("bugfix") && develop is not null)
                 source = develop;
             else
             {
