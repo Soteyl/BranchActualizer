@@ -9,16 +9,16 @@ public class BitBucketActualRepositoriesCacheContainer : IActualRepositoriesCont
     private readonly TimeSpan _cacheTime;
     private DateTime _lastCached;
     private readonly string _workspaceSlugOrUuid;
-    private readonly string _projectUuid;
+    private readonly string[] _projectNames;
 
-    private IEnumerable<RepositoryInfo>? _repositories;
+    private List<RepositoryInfo>? _repositories;
 
-    public BitBucketActualRepositoriesCacheContainer(SharpBucketV2 bucket, TimeSpan cacheTime, string workspaceSlugOrUuid, string projectUuid)
+    public BitBucketActualRepositoriesCacheContainer(SharpBucketV2 bucket, TimeSpan cacheTime, string workspaceSlugOrUuid, string[] projectNames)
     {
         _bucket = bucket;
         _cacheTime = cacheTime;
         _workspaceSlugOrUuid = workspaceSlugOrUuid;
-        _projectUuid = projectUuid;
+        _projectNames = projectNames;
     }
 
     public async Task<IEnumerable<RepositoryInfo>> GetActualRepositoriesAsync(CancellationToken cancellationToken = default)
@@ -29,21 +29,26 @@ public class BitBucketActualRepositoriesCacheContainer : IActualRepositoriesCont
             .WorkspacesEndPoint()
             .WorkspaceResource(_workspaceSlugOrUuid) 
             .RepositoriesResource;
-        _repositories = (await repositoryResource
-                .EnumerateRepositoriesAsync(new EnumerateRepositoriesParameters()
-                {
-                    Filter = $"project.uuid = \"{_projectUuid}\"",
-                    PageLen = 100
-                }, cancellationToken).ToListAsync(cancellationToken))
-            .Select(x => new RepositoryInfo()
-            {
-                Name = x.name,
-                Id = x.slug
-            }).OrderByDescending(x => x.Name);
+
+        _repositories = new List<RepositoryInfo>();
         
+        foreach (var name in _projectNames)
+        {
+            _repositories.AddRange(repositoryResource
+                    .ListRepositories(new ListRepositoriesParameters()
+                    {
+                        Filter = $"project.name = \"{name}\""
+                    }).Select(x => new RepositoryInfo()
+                    {
+                        Name = x.name,
+                        Id = x.slug
+                    }));
+        }
+        
+        _repositories = _repositories.OrderByDescending(x => x.Name).ToList();
         _lastCached = DateTime.Now;
 
-        return _repositories.OrderByDescending(x => x.Name);
+        return _repositories;
     }
 }
 

@@ -12,7 +12,7 @@ internal class BranchActualizerConfiguration
     
     public string? WorkspaceSlugOrUuid { get; set; }
 
-    public string? ProjectUuid { get; set; }
+    public string[] ProjectNames { get; set; }
 
     // Key is repository
     public Dictionary<string, List<string>>? ExcludedBranches { get; set; }

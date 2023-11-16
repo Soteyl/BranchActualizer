@@ -4,7 +4,7 @@ namespace BranchActualizer;
 
 public class BitBucketBranchActualizerSettings
 {
-    public string ProjectUuid { get; set; }
+    public string[] ProjectNames { get; set; }
     
     public string WorkspaceSlugOrUuid { get; set; }
     
@@ -15,7 +15,7 @@ public class BitBucketBranchActualizerSettings
 
     public BitBucketBranchActualizerSettings(BitBucketBranchActualizerSettings settings)
     {
-        ProjectUuid = settings.ProjectUuid;
+        ProjectNames = settings.ProjectNames;
         WorkspaceSlugOrUuid = settings.WorkspaceSlugOrUuid;
         Repositories = settings.Repositories;
     }

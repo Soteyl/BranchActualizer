@@ -4,7 +4,7 @@
   "TriggerChannelName": "",
   "MessageChannelName": "",
   "WorkspaceSlugOrUuid": "",
-  "ProjectUuid": "",
+  "ProjectNames": [""],
   "ExcludedBranches": {
     "CoreMonolith": [
       ""

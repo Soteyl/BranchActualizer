@@ -88,11 +88,11 @@ class Program
         services.AddSingleton(apiClient);
 
         services.AddSingleton<IActualRepositoriesContainer>(new BitBucketActualRepositoriesCacheContainer(_bucket,
-            TimeSpan.FromHours(1), config.WorkspaceSlugOrUuid!, config.ProjectUuid!));
+            TimeSpan.FromHours(1), config.WorkspaceSlugOrUuid!, config.ProjectNames!));
 
         services.AddSingleton(new BitBucketBranchActualizerSettings()
         {
-            ProjectUuid = config.ProjectUuid!,
+            ProjectNames = config.ProjectNames,
             WorkspaceSlugOrUuid = config.WorkspaceSlugOrUuid!
         });
         services.AddSingleton(new SlackBranchActualizerSettings()
