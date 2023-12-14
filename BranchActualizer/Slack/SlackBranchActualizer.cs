@@ -23,6 +23,8 @@ public class SlackBranchActualizer
     private readonly ISlackApiClient _slack;
     
     private readonly ILogger<SlackBranchActualizer> _logger;
+    
+    private readonly SemaphoreSlim _semaphore;
 
     public SlackBranchActualizer(SlackBranchActualizerSettings settings,
         IActualRepositoriesContainer repositories, IBranchActualizerFactory factory, ISlackApiClient slack, ILogger<SlackBranchActualizer> logger)
@@ -33,6 +35,7 @@ public class SlackBranchActualizer
         _factory = factory;
         _slack = slack;
         _logger = logger;
+        _semaphore = new(1, 1);
     }
 
     public async Task ActualizeAsync(string messageTextWithRepository, CancellationToken cancellationToken = default)
@@ -54,39 +57,64 @@ public class SlackBranchActualizer
 
         var message = await _slack.Chat.PostMessage(new Message()
         {
-            Text = $"Актуалізую {repositoryToActualize?.Name}...",
+            Text = $"Скоро актуалізую {repositoryToActualize?.Name}...",
             Channel = _resultMessageChannel
         });
 
-        var actualizer = await _factory.WithRepositories(new[] { repositoryToActualize })
-            .BuildBranchActualizerAsync(cancellationToken);
-        var result = await actualizer.ActualizeAsync(cancellationToken);
-        
-        _logger.Log(LogLevel.Information, $"Actualizing for {repositoryToActualize?.Name} finished. Deleting message...");
+        await _semaphore.WaitAsync(cancellationToken);
 
         try
         {
-            await _slack.Chat.Delete(message.Ts, _resultMessageChannel, true);
+            try
+            {
+                await _slack.Chat.Delete(message.Ts, _resultMessageChannel, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
+            message = await _slack.Chat.PostMessage(new Message()
+            {
+                Text = $"Актуалізую {repositoryToActualize?.Name}...",
+                Channel = _resultMessageChannel
+            });
+            
+            var actualizer = await _factory.WithRepositories(new[] { repositoryToActualize })
+                .BuildBranchActualizerAsync(cancellationToken);
+            var result = await actualizer.ActualizeAsync(cancellationToken);
+
+            _logger.Log(LogLevel.Information,
+                $"Actualizing for {repositoryToActualize?.Name} finished. Deleting message...");
+
+            try
+            {
+                await _slack.Chat.Delete(message.Ts, _resultMessageChannel, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            _logger.Log(LogLevel.Information, $"Message deleted. Sending result message...");
+
+            var resultMessage = GetResultMessage(result, repositoryToActualize?.Name);
+
+            _logger.Log(LogLevel.Information, $"Result message: {resultMessage}");
+
+            message = await _slack.Chat.PostMessage(new Message()
+            {
+                Text = resultMessage,
+                Channel = _resultMessageChannel,
+                LinkNames = true,
+            });
+
+            await _slack.Reactions.AddToMessage("repeat", _resultMessageChannel, message.Ts);
         }
-        catch (Exception e)
+        finally
         {
-            Console.WriteLine(e);
+            _semaphore.Release();
         }
-        
-        _logger.Log(LogLevel.Information, $"Message deleted. Sending result message...");
-
-        var resultMessage = GetResultMessage(result, repositoryToActualize?.Name);
-        
-        _logger.Log(LogLevel.Information, $"Result message: {resultMessage}");
-
-        message = await _slack.Chat.PostMessage(new Message()
-        {
-            Text = resultMessage,
-            Channel = _resultMessageChannel,
-            LinkNames = true,
-        });
-
-        await _slack.Reactions.AddToMessage("repeat", _resultMessageChannel, message.Ts);
     }
 
 
