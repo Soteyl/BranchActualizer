@@ -72,7 +72,8 @@ class Program
             {
                 Name = b,
                 Repository = x.Key
-            })) ?? new List<BranchInfo>()));
+            })) ?? new List<BranchInfo>()))
+                   .With(new ExcludeIgnoreBranchesMergeResolver());
         services.AddSingleton<IBranchMergeSolver>(mergeSolver);
         services.AddSingleton<IBranchAuthorResolver>(mergeSolver);
         
